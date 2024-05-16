@@ -38,17 +38,17 @@ rtrn_cols <- function(data, words, pretty = FALSE, exclude = FALSE, sort = TRUE)
 
   if (!exclude){
     if (pretty){
-      cols_index = colnames[str_detect(colnames, words)] %>%
+      cols_index = colnames[stringr::str_detect(colnames, words)] %>%
         gauntlet::strg_pretty_char()
     } else {
-      cols_index = colnames[str_detect(colnames, words)]
+      cols_index = colnames[stringr::str_detect(colnames, words)]
     }
   } else {
     if (pretty){
-      cols_index = colnames[!str_detect(colnames, words)] %>%
+      cols_index = colnames[!stringr::str_detect(colnames, words)] %>%
         gauntlet::strg_pretty_char()
     } else {
-      cols_index = colnames[!str_detect(colnames, words)]
+      cols_index = colnames[!stringr::str_detect(colnames, words)]
     }
   }
 
@@ -57,4 +57,5 @@ rtrn_cols <- function(data, words, pretty = FALSE, exclude = FALSE, sort = TRUE)
   return(cols_index)
 
 }
+
 

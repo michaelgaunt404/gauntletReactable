@@ -12,8 +12,16 @@
 #'                in the \code{dplyr} package such as \code{"mean"}, \code{"median"}, etc.
 #' @return A list of column definitions suitable for use in a Reactable table with specified
 #'         columns aggregated by the specified metric.
+#'
+#' @importFrom magrittr %>%
+#'
 #' @export
 #' @examples
+#'
+#' library(dplyr)
+#' library(tibble)
+#' library(magrittr)
+#' library(reactable)
 #'
 #' mtcars %>%
 #'   rownames_to_column("cars") %>%

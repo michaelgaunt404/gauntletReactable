@@ -19,7 +19,7 @@
 #'   )
 colDef_hide <- function(cols){
 
-  tmp_coldef = colDef(show = F)
+  tmp_coldef = reactable::colDef(show = F)
 
   list_of_colDefs <- lapply(cols, function(col) {
     return(tmp_coldef)

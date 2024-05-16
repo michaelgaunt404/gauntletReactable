@@ -25,11 +25,11 @@ combined_named_lists <- function(...){
   keys <- unique(unlist(map(item_list, names)))
 
   combined = keys %>%
-    map(~{
+    purrr::map(~{
       tmp = .x
-      flatten(map(item_list, ~.x[[tmp]]))
+      purrr::flatten(purrr::map(item_list, ~.x[[tmp]]))
     }) %>%
-    setNames(., keys)
+    stats::setNames(., keys)
 
   return(combined)
 }
