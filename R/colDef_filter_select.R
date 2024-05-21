@@ -25,14 +25,22 @@
 #'     ),
 #'     elementId = id, filterable = TRUE
 #'   )
-colDef_filter_select <- function (cols, id) {
+colDef_filter_select <- function (cols, id, apply_sort = T) {
 
   tmp_coldef = reactable::colDef(
     filterInput = function(values, name) {
+
+      if(apply_sort) {
+        tmp_values = sort(unique(values)) %>% colDef_filter_sort_labels()} else {
+          tmp_values = unique(values) %>%  colDef_filter_sort_labels()}
+
       htmltools::tags$select(
         onchange = sprintf(stringr::str_glue("Reactable.setFilter('{id}', '%s', event.target.value || undefined)"), name),
         htmltools::tags$option(value = "", "All"),
-        lapply(unique(values), htmltools::tags$option),
+        lapply(
+          tmp_values
+          # ifelse(apply_sort, sort(unique(values)), unique(values))
+          ,htmltools::tags$option),
         "aria-label" = sprintf("Filter %s", name),
         style = "width: 100%; height: 28px;"
       )
@@ -45,7 +53,5 @@ colDef_filter_select <- function (cols, id) {
 
   named_list_of_colDefs <- setNames(list_of_colDefs, cols)
 }
-
-
 
 

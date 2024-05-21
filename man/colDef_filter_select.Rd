@@ -4,7 +4,7 @@
 \alias{colDef_filter_select}
 \title{Generate column definitions with filter dropdown menus for specified columns in a Reactable table}
 \usage{
-colDef_filter_select(cols, id)
+colDef_filter_select(cols, id, apply_sort = T)
 }
 \arguments{
 \item{cols}{A character vector specifying the column names for which the filter dropdown menus
