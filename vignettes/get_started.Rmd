@@ -1,0 +1,290 @@
+---
+title: "basic_usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{basic_usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gauntletReactable)
+library(tidyverse)
+library(reactable)
+library(html)
+```
+
+
+## Intro 
+
+This vignette provides a deeper dive than the `README` for `gauntletReactable`.
+
+`reactable` is an extremely versatile package that can create very nice interactive tables. `gauntletReactable` extends this capability and provides a set of convenience functions that make it easier to program with. Primarily, it helps in defining `colDefs`—using `reactable` formatting can be very verbose and code-intensive, but this eliminates that need and makes table production "low-code". Additionally, it provides a set of wrapper functions that handle JavaScript for the user, adding functionality and features to tables without requiring knowledge of JS.
+
+`The goal of this document is not to demonstrate how to acquire, process, and analyze data from Replica using replicaToolkitR.`
+
+
+## Set-Up 
+
+Here are the packages you'll need for this vignette. 
+
+```{r}
+library(gauntletReactable)
+library(tidyverse)
+library(reactable)
+library(htmlwidgets)
+library(htmltools)
+```
+
+And this is the data that we will be using.
+```{r message = FALSE, warning=FALSE}
+mtcars_new = mtcars %>%
+ rownames_to_column("cars")
+```
+
+# Table Themeing 
+
+`reactable` provides many options for table theming to enhance the base table it creates. See the example below:
+
+```{r eval=FALSE}
+reactable(mtcars_new)
+
+reactable(mtcars_new
+  ,compact = T, defaultPageSize = 10, highlight = T
+  ,filterable = T, fullWidth = T, striped = T, resizable = T)
+```
+
+
+```{r}
+bslib::navset_card_pill(
+  bslib::nav_panel(
+      "No Theming", reactable(mtcars_new))
+  
+  ,bslib::nav_panel(
+    "With Theming"
+    ,reactable(mtcars_new
+  ,compact = T, defaultPageSize = 10, highlight = T
+  ,filterable = T, fullWidth = T, striped = T, resizable = T)
+  )
+)
+
+```
+
+If you're like me, you appreciate consistency and dislike unnecessary coding. Creating multiple tables for a report or project and having to apply the same theming inputs to each table can be tedious. 
+
+`gauntletReactable` provides the `rctble_format_table()` function that applies a standard set of theming instructions to a table.
+
+```{r}
+reactable(
+  mtcars_new) %>% 
+  rctble_format_table()
+```
+
+If you don't like the default theming, you can easily change it:
+```{r eval = F}
+reactable(
+  mtcars_new) %>% 
+  rctble_format_table(striped = F)
+```
+
+Creating your own table formatting function is very easy, so feel free to use `rctble_format_table()` as a template to create your own if needed.
+
+
+# ColDef Basics
+
+As mentioned before, the real "meat and potatoes" of `reactable` is the `colDef()` function, which allows you to create column definitions for table attributes.
+
+`colDefs` are contained in a list that goes into the columns input. The table below makes empty column definitions for both the cars and mpg attributes.
+
+```{r}
+reactable(
+  mtcars_new,
+  columns = list(
+    cars = colDef(name = "cars")
+    ,mpg = colDef(name = "mpg")
+  )
+)
+```
+
+You can build up more detailed column definitions for each attribute with additional inputs. 
+```{r}
+cars = colDef(name = "cars"
+              ,sticky = "left"
+              ,style = list(borderRight = "1px solid #eee")
+              ,minWidth = 200)
+
+print(cars)
+```
+
+But as you can see below, making a good-looking table with the default method can get complex fast
+
+```{r}
+reactable(
+  mtcars_new,
+  columns = list(
+    cars = colDef(name = "cars"
+              ,sticky = "left"
+              ,style = list(borderRight = "1px solid #eee")
+              ,minWidth = 200)
+    ,mpg = colDef(name = "mpg"
+                  ,minWidth = 200
+                  ,style = reactablefmtr::color_scales(mtcars_new, c("#15607A", "#FFFFFF", "#FA8C00")))
+    ,cyl = colDef(name = "cyl"
+                  ,show = F)
+    ,disp = colDef(name = "disp"
+                  ,style = reactablefmtr::color_scales(mtcars_new, c("#15607A", "#FFFFFF", "#FA8C00")))
+    ,hp = colDef(name = "hp"
+                  ,style = reactablefmtr::color_scales(mtcars_new, c("#15607A", "#FFFFFF", "#FA8C00")))
+  )
+)
+```
+
+Ideally, we want to make the creation of this table as easy and straightforward as possible, avoiding unnecessary duplication of steps where applicable.
+
+In the method above, we specify for each column the processing steps to apply. What `gauntletReactable` does is provide the ability to define a process we'd like to apply to a table and specify which columns we want it applied to—very similar to the `mutate(across(c(...), ~.x))`.
+
+## Robust column definitions
+
+This package provides several convenience functions, named using the `colDef_%%%` convention, to perform common operations on `reactable` tables. These functions are designed to simplify repetitive tasks by allowing you to apply predefined column definitions to specified columns.
+
+The main input for these functions is cols, which takes a string vector of column names to apply the definitions to.
+
+The code below shows how to hide each of the named attributes using `colDef_hide()`:
+```{r}
+mtcars_new %>%
+  reactable(
+    columns = combined_named_lists(
+      colDef_hide(cols = c("vs", "am", "gear", "carb", "wt"))
+    ), defaultColDef = colDef(footerStyle = list(fontWeight = "bold"))
+  )
+```
+
+The code below recreates the example of the more complicated `reactable` table highlighted earlier. 
+
+Now, we define column definition functions that we want to apply to the table and then specify which column attributes they should be applied to. This approach results in much shorter and easier-to-understand code.
+
+```{r}
+reactable(
+  mtcars_new,
+  columns = combined_named_lists(
+    colDef_sticky(cols = "cars")
+    ,colDef_colWidth_robust(cols = c("cars", "mpg"), minWidth = 200)
+    ,colDef_hide(cols = "cyl")
+    ,colDef_colorScales(data = mtcars_new, cols = c('cyl', 'disp', 'hp')))
+  ,defaultColDef = colDef(footerStyle = list(fontWeight = "bold"))
+)
+```
+
+## Even More Conveinence 
+
+Tables can have many columns, and at some point, you may want to apply a processing function to many columns and potentially add more than one process to those columns. This can create a scenario where you might be applying multiple functions to long string vectors of column names.
+
+For example:
+```{r eval=F}
+....
+,colDef_colorScales(data = mtcars_new, cols = c('cyl', 'disp', 'hp', 'drat'))
+,colDef_colWidth_robust(cols = c('cyl', 'disp', 'hp', 'drat'), minWidth = 200)
+,....
+
+```
+
+These column strings can get especially long if your column names are wordy or long in their own right.
+
+To address this problem, `gauntletReactable` provides the `rtrn_cols()` function, which can create long column name vectors based on user input.
+
+```{r}
+rtrn_cols(data = mtcars_new, "cars", exclude = F)
+rtrn_cols(data = mtcars_new, "cars", exclude = T)
+```
+
+```{r}
+rtrn_cols(data = mtcars_new, "cars|mpg", exclude = F) 
+rtrn_cols(data = mtcars_new, "cars|mp", exclude = F)
+```
+
+The code below illustrates how you can apply a color scale to all columns besides `cars` and `mpg` based on fuzzy string matches on `cars|mp` with the `|` pipe included.
+```{r}
+reactable(
+  mtcars_new,
+  columns = combined_named_lists(
+    colDef_colorScales(
+      data = mtcars_new
+      ,cols = rtrn_cols(mtcars_new, "cars|mp", exclude = T)
+    ))
+  ,defaultColDef = colDef(footerStyle = list(fontWeight = "bold"))
+)
+```
+
+
+# Javascript Wrapper Functions
+
+Some advanced `reactable` features can only be deployed with the use of JavaScript (JS).
+
+Many R users have limited JS knowledge and skills, so `gauntletReactable` provides convenience functions that allow users to give their tables features that rely on JS under the hood but without having to write any themselves.
+
+## Custom Filters
+
+Out of the box, `reactable` table columns can be filtered using text match inputs.
+
+String filtering doesn’t make sense for attributes with factors or numbers. `gauntletReactable` provides functions that allow you to make drop-down menus or slider ranges for column filtering.
+
+> **Note:** These tables require an ID input. These need to be unique for each table in the project/analysis pipeline.
+
+```{r}
+id = "temp_id"
+mtcars_new %>%
+    select(cars:disp) %>% 
+  reactable(
+    defaultColDef = colDef(footerStyle = list(fontWeight = "bold")),
+    columns = combined_named_lists(
+      colDef_filter_select(cols = c("cars"), id = id)
+            ,colDef_filter_slider(cols = c("disp"), id = id)
+
+    ),
+    elementId = id, filterable = TRUE
+  )
+```
+
+
+## Downloading Tables
+
+With some JS, CSS, and HTML, you can create a `download CSV` button and wire your table to it. As a plus, it will maintain any filtering you apply to your table when you save it out. Give it a try!
+
+```{r}
+
+id = "temp_id"
+mtcars_new %>%
+    select(cars:disp) %>% 
+  reactable(
+    defaultColDef = colDef(footerStyle = list(fontWeight = "bold")),
+    columns = combined_named_lists(
+      colDef_filter_select(cols = c("cars"), id = id)
+      ,colDef_filter_slider(cols = c("disp"), id = id)
+    ), elementId = id, filterable = TRUE
+  ) %>% 
+rctble_add_download(id = id)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

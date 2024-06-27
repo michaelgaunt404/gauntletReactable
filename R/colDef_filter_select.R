@@ -39,7 +39,6 @@ colDef_filter_select <- function (cols, id, apply_sort = T) {
         htmltools::tags$option(value = "", "All"),
         lapply(
           tmp_values
-          # ifelse(apply_sort, sort(unique(values)), unique(values))
           ,htmltools::tags$option),
         "aria-label" = sprintf("Filter %s", name),
         style = "width: 100%; height: 28px;"
@@ -53,5 +52,31 @@ colDef_filter_select <- function (cols, id, apply_sort = T) {
 
   named_list_of_colDefs <- setNames(list_of_colDefs, cols)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

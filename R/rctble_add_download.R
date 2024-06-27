@@ -1,14 +1,12 @@
 rctble_add_download = function (object, id)
 {
   object$elementId = id
-  # object$x$tag$attribs$bordered = T
-  # object$x$tag$attribs$highlight = T
-  # object$x$tag$attribs$striped = T
+
   temp = htmltools::browsable(
     htmltools::tagList(
 
       htmltools::tags$button(
-        style = css(
+        style = htmltools::css(
           width = "250px"
         )
 

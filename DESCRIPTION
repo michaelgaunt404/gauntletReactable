@@ -16,5 +16,8 @@ Imports:
     reactablefmtr
 Suggests: 
     dplyr,
+    knitr,
+    rmarkdown,
     tibble
 URL: https://michaelgaunt404.github.io/gauntletReactable/
+VignetteBuilder: knitr
